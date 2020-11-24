@@ -4,7 +4,7 @@ const { generateNodeId } = require('gatsby-node-helpers').default({
   typePrefix: TYPE_PREFIX_COCKPIT,
 })
 
-function getFieldsOfTypes(item, types) {
+function getFieldsOfTypes (item, types) {
   const fieldsOfTypes = Object.keys(item)
     .filter(
       fieldName => item[fieldName] && types.includes(item[fieldName].type)
@@ -32,7 +32,7 @@ function getFieldsOfTypes(item, types) {
   return fieldsOfTypes
 }
 
-function linkImageFieldsToImageNodes(node, images) {
+function linkImageFieldsToImageNodes (node, images) {
   getFieldsOfTypes(node, ['image']).forEach(field => {
     if (images[field.value] !== null) {
       field.value___NODE = images[field.value].id
@@ -54,7 +54,7 @@ function linkImageFieldsToImageNodes(node, images) {
   })
 }
 
-function linkAssetFieldsToAssetNodes(node, assets) {
+function linkAssetFieldsToAssetNodes (node, assets) {
   getFieldsOfTypes(node, ['asset']).forEach(field => {
     if (assets[field.value]) {
       field.value___NODE = assets[field.value].id
@@ -65,7 +65,7 @@ function linkAssetFieldsToAssetNodes(node, assets) {
   })
 }
 
-function createObjectNodes(node, objectNodeFactory) {
+function createObjectNodes (node, objectNodeFactory) {
   getFieldsOfTypes(node, ['object']).forEach(field => {
     const objectNodeId = objectNodeFactory.create(field.value)
     field.value___NODE = objectNodeId
@@ -73,22 +73,22 @@ function createObjectNodes(node, objectNodeFactory) {
   })
 }
 
-function linkMarkdownFieldsToMarkdownNodes(node, markdowns) {
+function linkMarkdownFieldsToMarkdownNodes (node, markdowns) {
   getFieldsOfTypes(node, ['markdown']).forEach(field => {
     field.value___NODE = markdowns[field.value].id
     delete field.value
   })
 }
 
-function linkLayoutFieldsToLayoutNodes(node, layouts) {
+function linkLayoutFieldsToLayoutNodes (node, layouts) {
   getFieldsOfTypes(node, ['layout', 'layout-grid']).forEach(field => {
-    const layoutHash = hash(JSON.stringify(field.value))
-    field.value___NODE = layouts[layoutHash].id
-    delete field.value
+    // const layoutHash = hash(JSON.stringify(field.value))
+    // field.value___NODE = layouts[layoutHash].id
+    field.value___NODE = layouts[node.cockpitId].id
   })
 }
 
-function linkCollectionLinkFieldsToCollectionItemNodes(node) {
+function linkCollectionLinkFieldsToCollectionItemNodes (node) {
   getFieldsOfTypes(node, ['collectionlink']).forEach(field => {
     if (Array.isArray(field.value)) {
       const collectionName = field.value[0].link

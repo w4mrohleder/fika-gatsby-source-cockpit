@@ -34,7 +34,7 @@ exports.sourceNodes = async (
     reporter
   )
   const markdownNodeFactory = new MarkdownNodeFactory(createNode)
-  const layoutNodeFactory = new LayoutNodeFactory(createNode)
+  // const layoutNodeFactory = new LayoutNodeFactory(createNode)
 
   await cockpit.validateBaseUrl()
   await cockpit.validateToken()
@@ -84,6 +84,8 @@ exports.sourceNodes = async (
     const id = markdownNodeFactory.create(localMarkdown)
     markdowns[markdown] = { id }
   }
+
+  const layoutNodeFactory = new LayoutNodeFactory(createNode, images)
 
   for (let layout in layouts) {
     const id = layoutNodeFactory.create(layouts[layout])

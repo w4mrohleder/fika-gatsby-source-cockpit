@@ -8,12 +8,38 @@ const {
 })
 const hash = require('string-hash')
 
+function traverse (jsonObj, images) {
+  if (jsonObj !== null && typeof jsonObj == 'object') {
+    Object.entries(jsonObj).forEach(([key, value]) => {
+      // key is either an array index or object key
+      if (key === 'path') {
+        if (images[jsonObj[key]] !== null) {
+          const imageField = jsonObj
+          const path = jsonObj[key]
+
+          // imageField.value___NODE = images[path].id
+          imageField.path = images[path].localPath
+        } else {
+          jsonObj[key] = null
+        }
+      } else {
+        traverse(value, images)
+      }
+    })
+  } else {
+    // jsonObj is a number or string
+  }
+}
+
 module.exports = class LayoutNodeFactory {
-  constructor(createNode) {
+  constructor (createNode, images) {
     this.createNode = createNode
+    this.images = images
   }
 
-  create(layout) {
+  create (layout) {
+    traverse(layout, this.images)
+
     const stringifiedLayout = JSON.stringify(layout)
     const partialId = `${hash(stringifiedLayout)}`
 

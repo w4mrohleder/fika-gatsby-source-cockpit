@@ -11,7 +11,7 @@ const {
 const getFieldsOfTypes = require('./helpers.js').getFieldsOfTypes
 
 module.exports = class CockpitService {
-  constructor(
+  constructor (
     baseUrl,
     token,
     locales,
@@ -27,7 +27,7 @@ module.exports = class CockpitService {
     this.aliases = aliases
   }
 
-  async fetch(endpoint, method, lang = null) {
+  async fetch (endpoint, method, lang = null) {
     return request({
       uri: `${this.baseUrl}/api${endpoint}?token=${this.token}${
         lang ? `&lang=${lang}` : ''
@@ -37,7 +37,7 @@ module.exports = class CockpitService {
     })
   }
 
-  async validateBaseUrl() {
+  async validateBaseUrl () {
     try {
       await this.fetch('', METHODS.GET)
     } catch (error) {
@@ -47,7 +47,7 @@ module.exports = class CockpitService {
     }
   }
 
-  async validateToken() {
+  async validateToken () {
     try {
       await this.fetch('/collections/listCollections', METHODS.GET)
     } catch (error) {
@@ -55,15 +55,15 @@ module.exports = class CockpitService {
     }
   }
 
-  async getCollectionNames() {
+  async getCollectionNames () {
     return this.fetch('/collections/listCollections', METHODS.GET)
   }
 
-  async getSingletonNames() {
+  async getSingletonNames () {
     return this.fetch('/singletons/listSingletons', METHODS.GET)
   }
 
-  async getCollection(name) {
+  async getCollection (name) {
     const {
       fields: collectionFields,
       entries: collectionEntries,
@@ -101,7 +101,7 @@ module.exports = class CockpitService {
     return { items: collectionItems, name: officialName }
   }
 
-  async getSingleton(name) {
+  async getSingleton (name) {
     const singletonEntry = await this.fetch(
       `/singletons/get/${name}`,
       METHODS.GET
@@ -138,7 +138,7 @@ module.exports = class CockpitService {
     return { items: singletonItems, name: officialName }
   }
 
-  async getCollections() {
+  async getCollections () {
     const names = await this.getCollectionNames()
     const whiteListedNames = this.whiteListedCollectionNames
 
@@ -155,7 +155,7 @@ module.exports = class CockpitService {
     )
   }
 
-  async getSingletons() {
+  async getSingletons () {
     const names = await this.getSingletonNames()
     const whiteListedNames = this.whiteListedSingletonNames
 
@@ -172,7 +172,7 @@ module.exports = class CockpitService {
     )
   }
 
-  normalizeResources(nodes) {
+  normalizeResources (nodes) {
     const existingImages = {}
     const existingAssets = {}
     const existingMarkdowns = {}
@@ -188,6 +188,9 @@ module.exports = class CockpitService {
           existingAssets,
           existingMarkdowns
         )
+
+        this.normalizeNodeItemLayoutAssets(item, existingImages)
+
         this.normalizeNodeItemLayouts(
           item,
           existingImages,
@@ -206,11 +209,52 @@ module.exports = class CockpitService {
     }
   }
 
-  normalizeNodeItemImages(item, existingImages) {
+  normalizeNodeItemLayoutAssets (item, existingImages) {
+    const baseUrl = this.baseUrl
+
+    function traverse (jsonObj) {
+      if (jsonObj !== null && typeof jsonObj == 'object') {
+        Object.entries(jsonObj).forEach(([key, value]) => {
+          // key is either an array index or object key
+          if (key === 'path') {
+            const imageField = jsonObj
+            let path = imageField.path
+            if (path == null) {
+              return
+            }
+            if (path.startsWith('/')) {
+              if (path.startsWith('/storage/uploads')) {
+                path = `${baseUrl}${path}`
+              } else {
+                path = `${baseUrl}/storage/uploads${path}`
+              }
+            } else if (!path.startsWith('http')) {
+              path = `${baseUrl}/${path}`
+            }
+            imageField.path = path
+
+            existingImages[path] = null
+          } else {
+            traverse(value)
+          }
+        })
+      } else {
+        // jsonObj is a number or string
+      }
+    }
+
+    getFieldsOfTypes(item, ['layout']).forEach(layoutField => {
+      // console.log(layoutField.value)
+      traverse(layoutField)
+    })
+  }
+
+  normalizeNodeItemImages (item, existingImages) {
     getFieldsOfTypes(item, ['image', 'gallery']).forEach(field => {
       if (!Array.isArray(field.value)) {
         const imageField = field
         let path = imageField.value.path
+        // console.log(path)
 
         if (path == null) {
           return
@@ -255,7 +299,7 @@ module.exports = class CockpitService {
     }
   }
 
-  normalizeNodeItemAssets(item, existingAssets) {
+  normalizeNodeItemAssets (item, existingAssets) {
     getFieldsOfTypes(item, ['asset']).forEach(assetField => {
       let path = assetField.value.path
 
@@ -274,7 +318,7 @@ module.exports = class CockpitService {
     }
   }
 
-  normalizeNodeItemMarkdowns(
+  normalizeNodeItemMarkdowns (
     item,
     existingImages,
     existingAssets,
@@ -298,7 +342,7 @@ module.exports = class CockpitService {
     }
   }
 
-  normalizeNodeItemLayouts(
+  normalizeNodeItemLayouts (
     item,
     existingImages,
     existingAssets,
@@ -306,9 +350,7 @@ module.exports = class CockpitService {
     existingLayouts
   ) {
     getFieldsOfTypes(item, ['layout', 'layout-grid']).forEach(layoutField => {
-      const stringifiedLayout = JSON.stringify(layoutField.value)
-      const layoutHash = hash(stringifiedLayout)
-      existingLayouts[layoutHash] = layoutField.value
+      existingLayouts[item.cockpitId] = layoutField.value
       // TODO: this still needs to be implemented for layout fields
       // extractImagesFromMarkdown(markdownField.value, existingImages)
       // extractAssetsFromMarkdown(markdownField.value, existingAssets)
