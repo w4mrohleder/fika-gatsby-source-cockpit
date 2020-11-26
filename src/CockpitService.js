@@ -350,7 +350,10 @@ module.exports = class CockpitService {
     existingLayouts
   ) {
     getFieldsOfTypes(item, ['layout', 'layout-grid']).forEach(layoutField => {
-      existingLayouts[item.cockpitId] = layoutField.value
+      // const stringifiedLayout = JSON.stringify(layoutField.value)
+      // const layoutHash = hash(stringifiedLayout)
+      // existingLayouts[layoutHash] = layoutField.value
+      existingLayouts[item.lang + item.cockpitId] = layoutField.value
       // TODO: this still needs to be implemented for layout fields
       // extractImagesFromMarkdown(markdownField.value, existingImages)
       // extractAssetsFromMarkdown(markdownField.value, existingAssets)

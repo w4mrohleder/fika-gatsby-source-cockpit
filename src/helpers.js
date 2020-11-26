@@ -84,7 +84,7 @@ function linkLayoutFieldsToLayoutNodes (node, layouts) {
   getFieldsOfTypes(node, ['layout', 'layout-grid']).forEach(field => {
     // const layoutHash = hash(JSON.stringify(field.value))
     // field.value___NODE = layouts[layoutHash].id
-    field.value___NODE = layouts[node.cockpitId].id
+    field.value___NODE = layouts[node.lang + node.cockpitId].id
   })
 }
 
